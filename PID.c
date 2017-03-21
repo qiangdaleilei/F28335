@@ -14,3 +14,23 @@ void PID_init(struct _pid *Current)
 	Current->Ki=80;
 	Current->Kp=0.0;
 }
+
+//单步更新函数 输入为误差  输出为调制比
+//在PID调节过程中 误差小增大积分函数消除静差
+//                误差大减小积分函数防止饱和
+double PID_realize(struct _pid *Current,double It)
+{
+	int index=0;
+	Current->SetSpeed=It;
+	Current->err=Current->SetSpeed-Current->ActualSpeed;
+	if(abs(pid.err)>500)
+		index=0;
+	else
+		index=1;
+	Current->integral+=Current->err*index;
+	Current->voltage=Current->Kp*Current->err+Current->Ki*Current->integral
+			+Current->Kd*((Current->err*index)-Current->err_last);
+	Current->err_last=index*Current->err;
+	//pid.ActualSpeed=pid.voltage*1.0;
+	return Current->voltage;
+}
